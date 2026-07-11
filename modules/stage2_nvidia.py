@@ -157,12 +157,12 @@ class EnvyControl(ModuleBase):
         super().__init__()
         self.commands = [
             Command("dnf5 install -y python3-pip", "Cài đặt python3-pip", is_sudo=True),
-            Command("pip install envycontrol", "Cài đặt envycontrol qua pip", is_sudo=True),
+            Command("pip install --break-system-packages envycontrol || pip install envycontrol", "Cài đặt envycontrol qua pip (hỗ trợ PEP 668)", is_sudo=True),
             Command("envycontrol -s hybrid", "Đặt chế độ đồ họa Hybrid (Optimus)", is_sudo=True)
         ]
 
     def validate(self) -> CheckResult:
-        res = subprocess.run("which envycontrol || pip show envycontrol", shell=True, capture_output=True, text=True)
+        res = subprocess.run("which envycontrol || pip show envycontrol || pip show envycontrol --break-system-packages", shell=True, capture_output=True, text=True)
         if res.returncode == 0:
             res_mode = subprocess.run("envycontrol -q", shell=True, capture_output=True, text=True)
             return CheckResult(True, "✓ OK", f"EnvyControl đã cài đặt (Chế độ: {res_mode.stdout.strip()})")
@@ -171,7 +171,7 @@ class EnvyControl(ModuleBase):
     def get_reset_commands(self) -> list[ResetCommand]:
         return [
             ResetCommand("envycontrol -s integrated || true", "Đặt chế độ đồ họa về Integrated trước khi gỡ", is_sudo=True, skip_on_error=True),
-            ResetCommand("pip uninstall -y envycontrol || true", "Gỡ bỏ envycontrol qua pip", is_sudo=True, skip_on_error=True)
+            ResetCommand("pip uninstall --break-system-packages -y envycontrol || pip uninstall -y envycontrol || true", "Gỡ bỏ envycontrol qua pip", is_sudo=True, skip_on_error=True)
         ]
 
 
@@ -184,13 +184,12 @@ class BrightnessFix(ModuleBase):
     def __init__(self):
         super().__init__()
         self.commands = [
-            Command("echo 'blacklist acer_wmi' | tee /etc/modprobe.d/blacklist-acer-wmi.conf", "Blacklist driver acer_wmi", is_sudo=True),
-            Command("grubby --update-kernel=ALL --args='acpi_backlight=native'", "Cấu hình kernel parameter acpi_backlight=native", is_sudo=True),
-            Command("dracut -f", "Rebuild initramfs (dracut -f)", is_sudo=True)
+            Command("echo 'blacklist acer_wmi' | tee /etc/modprobe.d/nitro5-blacklist.conf", "Blacklist driver acer_wmi (tránh xung đột độ sáng/quạt)", is_sudo=True),
+            Command("grubby --update-kernel=ALL --args='acpi_backlight=native'", "Cấu hình kernel parameter acpi_backlight=native", is_sudo=True)
         ]
 
     def validate(self) -> CheckResult:
-        blacklist_ok = os.path.exists("/etc/modprobe.d/blacklist-acer-wmi.conf")
+        blacklist_ok = os.path.exists("/etc/modprobe.d/nitro5-blacklist.conf")
         cmdline_ok = False
         if os.path.exists("/proc/cmdline"):
             try:
@@ -206,9 +205,8 @@ class BrightnessFix(ModuleBase):
 
     def get_reset_commands(self) -> list[ResetCommand]:
         return [
-            ResetCommand("rm -f /etc/modprobe.d/blacklist-acer-wmi.conf || true", "Xóa blacklist file của acer_wmi", is_sudo=True, skip_on_error=True),
-            ResetCommand("grubby --update-kernel=ALL --remove-args='acpi_backlight=native' || true", "Xóa acpi_backlight=native khỏi kernel args", is_sudo=True, skip_on_error=True),
-            ResetCommand("dracut -f", "Rebuild initramfs", is_sudo=True)
+            ResetCommand("rm -f /etc/modprobe.d/nitro5-blacklist.conf || true", "Xóa blacklist file của acer_wmi", is_sudo=True, skip_on_error=True),
+            ResetCommand("grubby --update-kernel=ALL --remove-args='acpi_backlight=native' || true", "Xóa acpi_backlight=native khỏi kernel args", is_sudo=True, skip_on_error=True)
         ]
 
 
@@ -350,32 +348,18 @@ class NvidiaGdmWayland(ModuleBase):
         super().__init__()
         self.commands = [
             Command("rm -f /etc/udev/rules.d/61-gdm.rules", "Khôi phục rule GDM gốc", is_sudo=True),
-            Command("grubby --update-kernel=ALL --args='nvidia-drm.modeset=1 nvidia-drm.fbdev=1' 2>/dev/null || true", "Bật NVIDIA DRM modeset & fbdev", is_sudo=True, skip_on_error=True),
-            Command("mkdir -p /etc/environment.d && echo -e '__VK_LAYER_NV_optimus=NVIDIA_only' | tee /etc/environment.d/nvidia-wayland.conf", "Cấu hình biến môi trường GDM Wayland", is_sudo=True)
+            Command("grubby --update-kernel=ALL --args='nvidia-drm.modeset=1 nvidia-drm.fbdev=1' 2>/dev/null || true", "Bật NVIDIA DRM modeset & fbdev", is_sudo=True, skip_on_error=True)
         ]
 
     def validate(self) -> CheckResult:
         rule_path = "/etc/udev/rules.d/61-gdm.rules"
-        conf_path = "/etc/environment.d/nvidia-wayland.conf"
         fallback_ok = not os.path.exists(rule_path)
-        
-        conf_ok = False
-        if os.path.exists(conf_path):
-            try:
-                with open(conf_path, "r") as f:
-                    content = f.read()
-                if "__VK_LAYER_NV_optimus=NVIDIA_only" in content:
-                    conf_ok = True
-            except Exception:
-                pass
-                
-        if fallback_ok and conf_ok:
+        if fallback_ok:
             return CheckResult(True, "✓ OK", "Quy tắc Fallback an toàn đang áp dụng")
-        return CheckResult(False, "✗ CHƯA CẤU HÌNH", "Thiếu file config hoặc cấu hình chưa tối ưu")
+        return CheckResult(False, "✗ CHƯA CẤU HÌNH", "Chưa khôi phục udev rules cho GDM")
 
     def get_reset_commands(self) -> list[ResetCommand]:
         return [
-            ResetCommand("rm -f /etc/environment.d/nvidia-wayland.conf || true", "Xóa cấu hình biến môi trường GDM Wayland", is_sudo=True, skip_on_error=True),
             ResetCommand("grubby --update-kernel=ALL --remove-args='nvidia-drm.fbdev=1' || true", "Xóa fbdev kernel arg", is_sudo=True, skip_on_error=True)
         ]
 
@@ -406,11 +390,8 @@ class VulkanSupport(ModuleBase):
 
 # Danh sách xuất bản
 MODULES = [
-    NvidiaDriver,
     NvidiaCuda,
     NvidiaVaapi,
-    SwitcherooControl,
-    EnvyControl,
     BrightnessFix,
     GamingOverlay,
     GameMode,

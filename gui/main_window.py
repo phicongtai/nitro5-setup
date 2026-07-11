@@ -371,20 +371,51 @@ class MainWindow:
         sidebar_box.set_margin_bottom(15)
 
         # Header Giai đoạn
-        lbl_giai_doan = Gtk.Label(label="GIAI ĐOẠN")
+        lbl_giai_doan = Gtk.Label(label="CÀI ĐẶT LÕI")
         lbl_giai_doan.add_css_class("sidebar-header")
         lbl_giai_doan.set_halign(Gtk.Align.START)
         sidebar_box.append(lbl_giai_doan)
 
-        # ListBox các giai đoạn
+        # ListBox các giai đoạn lõi
+        self.sidebar_list_core = Gtk.ListBox()
+        self.sidebar_list_core.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.sidebar_list_core.connect("row-selected", self.on_sidebar_row_selected)
+        sidebar_box.append(self.sidebar_list_core)
+
+        self.sidebar_rows = {}
+        # Hàng "⚡ Cài đặt Lõi (1-Click)"
+        row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        row_box.set_margin_start(10)
+        row_box.set_margin_end(10)
+        row_box.set_margin_top(8)
+        row_box.set_margin_bottom(8)
+        lbl_name = Gtk.Label()
+        lbl_name.set_markup("<b>⚡ Cài đặt Lõi (1-Click)</b>")
+        lbl_name.set_halign(Gtk.Align.START)
+        row_box.append(lbl_name)
+        row_core = Gtk.ListBoxRow()
+        row_core.set_child(row_box)
+        self.sidebar_list_core.append(row_core)
+        self.sidebar_rows[row_core] = "stage0"
+
+        # Dải phân cách
+        sidebar_box.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
+
+        # Header Tùy chọn
+        lbl_tuy_chon = Gtk.Label(label="CÀI ĐẶT TÙY CHỌN")
+        lbl_tuy_chon.add_css_class("sidebar-header")
+        lbl_tuy_chon.set_halign(Gtk.Align.START)
+        sidebar_box.append(lbl_tuy_chon)
+
+        # ListBox các giai đoạn tùy chọn
         self.sidebar_list = Gtk.ListBox()
         self.sidebar_list.set_selection_mode(Gtk.SelectionMode.SINGLE)
         self.sidebar_list.connect("row-selected", self.on_sidebar_row_selected)
         sidebar_box.append(self.sidebar_list)
 
-        # Nạp các Giai đoạn vào ListBox
-        self.sidebar_rows = {}
         for key, value in STAGES.items():
+            if key == "stage0":
+                continue
             row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             row_box.set_margin_start(10)
             row_box.set_margin_end(10)
@@ -414,6 +445,18 @@ class MainWindow:
         self.sidebar_results_list.set_selection_mode(Gtk.SelectionMode.SINGLE)
         self.sidebar_results_list.connect("row-selected", self.on_sidebar_row_selected)
         sidebar_box.append(self.sidebar_results_list)
+
+        # Hàng "🏆 Đánh giá Native"
+        row_score_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        row_score_box.set_margin_start(10)
+        row_score_box.set_margin_end(10)
+        row_score_box.set_margin_top(8)
+        row_score_box.set_margin_bottom(8)
+        row_score_box.append(Gtk.Label(label="🏆 Đánh giá Native"))
+        self.row_score = Gtk.ListBoxRow()
+        self.row_score.set_child(row_score_box)
+        self.sidebar_results_list.append(self.row_score)
+        self.sidebar_rows[self.row_score] = "native_score"
 
         # Hàng "Kiểm tra hệ thống"
         row_check_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -711,6 +754,58 @@ class MainWindow:
 
         self.stack.add_named(self.view_log_page, "view_log")
 
+        # 4. Trang Đánh giá Native
+        self.native_score_page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
+        self.native_score_page.set_margin_start(20)
+        self.native_score_page.set_margin_end(20)
+        self.native_score_page.set_margin_top(20)
+        self.native_score_page.set_margin_bottom(10)
+
+        lbl_score_title = Gtk.Label(label="🏆 Điểm tương thích phần cứng Native")
+        lbl_score_title.add_css_class("main-header")
+        lbl_score_title.set_halign(Gtk.Align.START)
+        self.native_score_page.append(lbl_score_title)
+
+        # Hộp chứa Điểm tổng thể & Rating
+        score_header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        score_header_box.set_valign(Gtk.Align.CENTER)
+        
+        self.lbl_overall_score = Gtk.Label()
+        self.lbl_overall_score.set_markup("<span size='xx-large' weight='bold'>0 / 100</span>")
+        score_header_box.append(self.lbl_overall_score)
+        
+        self.lbl_stars = Gtk.Label()
+        self.lbl_stars.set_markup("<span size='xx-large'>⭐⭐⭐⭐⭐</span>")
+        score_header_box.append(self.lbl_stars)
+        
+        self.native_score_page.append(score_header_box)
+
+        # Nút chạy quét điểm
+        self.btn_run_score = Gtk.Button(label="🔄 Chấm điểm hệ thống")
+        self.btn_run_score.add_css_class("suggested-action")
+        self.btn_run_score.connect("clicked", lambda x: self.run_native_score())
+        self.btn_run_score.set_halign(Gtk.Align.START)
+        self.native_score_page.append(self.btn_run_score)
+
+        # Hộp danh sách kết quả chi tiết
+        self.score_list_box = Gtk.ListBox()
+        self.score_list_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        
+        scroll_score = Gtk.ScrolledWindow()
+        scroll_score.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll_score.set_vexpand(True)
+        scroll_score.set_child(self.score_list_box)
+        self.native_score_page.append(scroll_score)
+
+        # Đăng ký vào Gtk.Stack
+        if self.has_adw:
+            clamp_score = Adw.Clamp()
+            clamp_score.set_maximum_size(860)
+            clamp_score.set_child(self.native_score_page)
+            self.stack.add_named(clamp_score, "native_score")
+        else:
+            self.stack.add_named(self.native_score_page, "native_score")
+
         # --- PROGRESS BAR AREA ---
         self.progress_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.progress_box.set_margin_start(20)
@@ -782,11 +877,13 @@ class MainWindow:
         if not row:
             return
             
-        # Bỏ chọn bên ListBox kia để tránh hiển thị nhiều dòng cùng chọn
-        if listbox == self.sidebar_list:
-            self.sidebar_results_list.select_row(None)
-        else:
+        # Bỏ chọn bên ListBox khác để tránh hiển thị nhiều dòng cùng chọn
+        if listbox != self.sidebar_list_core:
+            self.sidebar_list_core.select_row(None)
+        if listbox != self.sidebar_list:
             self.sidebar_list.select_row(None)
+        if listbox != self.sidebar_results_list:
+            self.sidebar_results_list.select_row(None)
 
         key = self.sidebar_rows.get(row)
         if not key:
@@ -810,6 +907,12 @@ class MainWindow:
             self.btn_run_stage.set_visible(False)
             self.btn_run_all.set_visible(False)
             self.load_full_log_file()
+        elif key == "native_score":
+            self.stack.set_visible_child_name("native_score")
+            self.progress_box.set_visible(False)
+            self.btn_run_stage.set_visible(False)
+            self.btn_run_all.set_visible(False)
+            self.run_native_score()
         else:
             self.stack.set_visible_child_name("setup_stage")
             self.progress_box.set_visible(True)
@@ -1435,6 +1538,11 @@ class MainWindow:
         
         if is_success:
             self.lbl_progress.set_text(f"Hoàn thành xuất sắc: {success_count}/{total} bước cài đặt.")
+            if "stage0" in represented_stages:
+                global_logger.log("=== CÀI ĐẶT LÕI HOÀN TẤT THÀNH CÔNG ===", "ok")
+                self.show_core_reboot_dialog()
+                return False
+                
             reboot_ids = {"nvidia_driver", "acer_nitro_native_fix", "brightness_fix", "nvidia_suspend_fix", "damx"}
             needs_reboot = any(m.id in reboot_ids for m in selected_modules)
             
@@ -1544,7 +1652,7 @@ class MainWindow:
         headers = ["Chức năng hệ thống", "Trạng thái", "Chi tiết cấu hình"]
         for col_idx, text in enumerate(headers):
             lbl = Gtk.Label()
-            lbl.set_markup(f"<b>{text}</b>")
+            lbl.set_markup(f"<b>{html.escape(text)}</b>")
             lbl.set_halign(Gtk.Align.START)
             lbl.set_margin_bottom(10)
             self.check_grid.attach(lbl, col_idx, 0, 1, 1)
@@ -2150,5 +2258,162 @@ class MainWindow:
         scroll.set_child(content_box)
 
         return scroll, optional_checkbox_map
+
+    def run_native_score(self):
+        """Chạy quét điểm tương thích native và cập nhật giao diện."""
+        from modules.stage9_native_score import calculate_score
+        
+        total_score, checks = calculate_score()
+        
+        # Cập nhật nhãn điểm
+        self.lbl_overall_score.set_markup(f"<span size='32000' weight='bold' foreground='#3498db'>{total_score}</span> <span size='16000' foreground='#888'>/ 100</span>")
+        
+        # Cập nhật rating sao
+        if total_score >= 90:
+            stars = "⭐⭐⭐⭐⭐ <span color='#2ecc71'>Xuất sắc</span>"
+        elif total_score >= 75:
+            stars = "⭐⭐⭐⭐ <span color='#3498db'>Tốt</span>"
+        elif total_score >= 50:
+            stars = "⭐⭐⭐ <span color='#f1c40f'>Trung bình</span>"
+        elif total_score >= 30:
+            stars = "⭐⭐ <span color='#e67e22'>Cơ bản</span>"
+        else:
+            stars = "⭐ <span color='#e74c3c'>Yếu</span>"
+        self.lbl_stars.set_markup(f"<span size='18000' weight='bold'>{stars}</span>")
+
+        # Xóa danh sách cũ
+        while True:
+            row = self.score_list_box.get_row_at_index(0)
+            if not row:
+                break
+            self.score_list_box.remove(row)
+
+        # Nạp danh sách mới
+        current_cat = None
+        for check in checks:
+            if check["category"] != current_cat:
+                current_cat = check["category"]
+                cat_row = Gtk.ListBoxRow()
+                cat_label = Gtk.Label()
+                cat_label.set_markup(f"<b>{html.escape(current_cat)}</b>")
+                cat_label.set_halign(Gtk.Align.START)
+                cat_label.set_margin_start(5)
+                cat_label.set_margin_top(10)
+                cat_label.set_margin_bottom(5)
+                cat_row.set_child(cat_label)
+                self.score_list_box.append(cat_row)
+
+            # Checkbox row
+            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=15)
+            row_box.set_margin_start(15)
+            row_box.set_margin_end(15)
+            row_box.set_margin_top(6)
+            row_box.set_margin_bottom(6)
+
+            # Icon status
+            icon_lbl = Gtk.Label()
+            if check["status"]:
+                icon_lbl.set_markup("<span foreground='#2ecc71'>✔</span>")
+            else:
+                icon_lbl.set_markup("<span foreground='#e74c3c'>✘</span>")
+            row_box.append(icon_lbl)
+
+            # Name and detail
+            lbl_info = Gtk.Label()
+            lbl_info.set_markup(f"<b>{html.escape(check['name'])}</b>\n<span size='small' foreground='#888'>{html.escape(check['detail'])}</span>")
+            lbl_info.set_halign(Gtk.Align.START)
+            row_box.append(lbl_info)
+
+            # Spacer
+            spacer = Gtk.Box()
+            spacer.set_hexpand(True)
+            row_box.append(spacer)
+
+            # Score badge
+            score_lbl = Gtk.Label()
+            score_color = "#2ecc71" if check["status"] else "#888"
+            score_lbl.set_markup(f"<span foreground='{score_color}' weight='bold'>{check['score']} / {check['max']} đ</span>")
+            row_box.append(score_lbl)
+
+            row = Gtk.ListBoxRow()
+            row.set_child(row_box)
+            self.score_list_box.append(row)
+
+    def show_core_reboot_dialog(self):
+        title = "⚡ Cài đặt Lõi hoàn tất!"
+        self.reboot_countdown = 60
+
+        def do_reboot():
+            cmd = Command("shutdown -r now", "Khởi động lại hệ thống", is_sudo=True)
+            self.runner.run_commands(
+                [cmd],
+                on_complete=lambda ok, s, t: None if ok else GLib.idle_add(
+                    self.show_toast, "Không thể khởi động lại tự động. Vui lòng reboot thủ công."
+                )
+            )
+
+        # Timer callback
+        def update_timer(dialog_obj, is_adw_dialog):
+            if not self.reboot_countdown or self.reboot_countdown <= 0:
+                if is_adw_dialog:
+                    dialog_obj.close()
+                else:
+                    dialog_obj.destroy()
+                do_reboot()
+                return False
+            
+            self.reboot_countdown -= 1
+            body_msg = (
+                f"Toàn bộ 27 cài đặt cốt lõi (Driver NVIDIA, DAMX, kernel params...) đã được cài đặt.\n"
+                f"Hệ thống sẽ tự động khởi động lại sau {self.reboot_countdown} giây để áp dụng các thay đổi."
+            )
+            if is_adw_dialog:
+                dialog_obj.set_body(body_msg)
+            else:
+                dialog_obj.props.secondary_text = body_msg
+            return True
+
+        body_msg = f"Toàn bộ 27 cài đặt cốt lõi (Driver NVIDIA, DAMX, kernel params...) đã được cài đặt.\nHệ thống sẽ tự động khởi động lại sau {self.reboot_countdown} giây để áp dụng các thay đổi."
+
+        if self.has_adw:
+            dialog = Adw.AlertDialog(
+                heading=title,
+                body=body_msg
+            )
+            dialog.add_response("cancel", "Hủy bỏ (Cài tiếp)")
+            dialog.add_response("reboot", "Khởi động lại ngay")
+            dialog.set_response_appearance("reboot", Adw.ResponseAppearance.SUGGESTED)
+            dialog.set_default_response("reboot")
+
+            timer_id = GLib.timeout_add_seconds(1, update_timer, dialog, True)
+
+            def on_response(dlg, response_id):
+                GLib.source_remove(timer_id)
+                if response_id == "reboot":
+                    do_reboot()
+                dlg.close()
+
+            dialog.connect("response", on_response)
+            dialog.present(self.window)
+        else:
+            dialog = Gtk.MessageDialog(
+                transient_for=self.window,
+                modal=True,
+                message_type=Gtk.MessageType.QUESTION,
+                buttons=Gtk.ButtonsType.YES_NO,
+                text=title
+            )
+            dialog.props.secondary_text = body_msg
+
+            timer_id = GLib.timeout_add_seconds(1, update_timer, dialog, False)
+
+            def on_response(dlg, response_id):
+                GLib.source_remove(timer_id)
+                if response_id == Gtk.ResponseType.YES:
+                    do_reboot()
+                dlg.destroy()
+
+            dialog.connect("response", on_response)
+            dialog.present()
 
 

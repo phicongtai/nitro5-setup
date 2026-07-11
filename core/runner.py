@@ -51,16 +51,25 @@ class Runner:
             
             full_cmd = cmd.cmd
             if cmd.is_sudo and self.sudo_password:
-                full_cmd = f"echo '{self.sudo_password}' | sudo -S {cmd.cmd}"
+                import shlex
+                full_cmd = f"sudo -S bash -c {shlex.quote(cmd.cmd)}"
                 
             try:
                 proc = subprocess.Popen(
                     full_cmd,
                     shell=True,
+                    stdin=subprocess.PIPE if (cmd.is_sudo and self.sudo_password) else None,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True
                 )
+                if cmd.is_sudo and self.sudo_password:
+                    try:
+                        proc.stdin.write(self.sudo_password + "\n")
+                        proc.stdin.flush()
+                        proc.stdin.close()
+                    except Exception:
+                        pass
                 
                 for line in iter(proc.stdout.readline, ''):
                     if line:

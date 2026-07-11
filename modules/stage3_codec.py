@@ -158,10 +158,6 @@ class BluetoothService(ModuleBase):
 
 # Danh sách xuất bản
 MODULES = [
-    FullFFmpeg,
-    GStreamerPlugins,
-    IntelMediaDriver,
-    PipeWireAudio,
     MozillaOpenH264,
     BluetoothService
 ]

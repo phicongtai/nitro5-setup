@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
+from modules.stage0_core import MODULES as STAGE0_MODULES
 from modules.stage1_system import MODULES as STAGE1_MODULES
 from modules.stage2_nvidia import MODULES as STAGE2_MODULES
 from modules.stage3_codec import MODULES as STAGE3_MODULES
@@ -27,6 +28,12 @@ _STAGE6_DESC = (
 DETECTED_DE = _CURRENT_DE
 
 STAGES = {
+    "stage0": {
+        "name": "⚡ Cài đặt Lõi (1-Click)",
+        "description": "Cài đặt tự động toàn bộ 27 module bắt buộc theo thứ tự tối ưu. Sau khi hoàn thành, hệ thống sẽ tự động yêu cầu reboot.",
+        "modules": STAGE0_MODULES,
+        "is_core": True
+    },
     "stage1": {
         "name": "Hệ thống cơ bản",
         "description": "Cập nhật hệ điều hành và kích hoạt các kho phần mềm chính (RPM Fusion, Flathub). Tối ưu DNF5: deltarpm, fastest mirror, countme=off.",

@@ -46,7 +46,6 @@ EOF"""
             Command("dnf5 install -y tlp tlp-rdw", "Cài đặt TLP và tiện ích mở rộng", is_sudo=True),
             Command(tlp_conf_content, "Ghi cấu hình tối ưu TLP (/etc/tlp.conf)", is_sudo=True),
             Command("systemctl enable --now tlp", "Bật và khởi chạy dịch vụ TLP", is_sudo=True),
-            Command("systemctl enable --now tlp-pd.service || true", "Kích hoạt tlp-pd.service để tương thích menu chọn chế độ GNOME", is_sudo=True, skip_on_error=True),
             Command("tlp start || true", "Áp dụng cấu hình TLP ngay lập tức", is_sudo=True, skip_on_error=True)
         ]
 
@@ -58,7 +57,7 @@ EOF"""
 
     def get_reset_commands(self) -> list[ResetCommand]:
         return [
-            ResetCommand("systemctl disable --now tlp tlp-pd.service || true", "Dừng và vô hiệu hóa các dịch vụ TLP", is_sudo=True, skip_on_error=True),
+            ResetCommand("systemctl disable --now tlp || true", "Dừng và vô hiệu hóa dịch vụ TLP", is_sudo=True, skip_on_error=True),
             ResetCommand("dnf5 remove -y tlp tlp-rdw || true", "Gỡ bỏ TLP", is_sudo=True, skip_on_error=True),
             ResetCommand("rm -f /etc/tlp.conf || true", "Xóa file cấu hình TLP", is_sudo=True, skip_on_error=True),
             ResetCommand("dnf5 install -y tuned tuned-ppd || true", "Cài đặt lại tuned và tuned-ppd mặc định", is_sudo=True, skip_on_error=True),
@@ -76,12 +75,27 @@ class BtrfsOptimize(ModuleBase):
         super().__init__()
         cmd_backup = "cp /etc/fstab /etc/fstab.bak 2>/dev/null || true"
         cmd_btrfs = (
-            "grep -q 'noatime' /etc/fstab || "
-            "sed -i '/\\bbtrfs\\b/ s/\\bdefaults\\b/defaults,noatime/' /etc/fstab ; "
-            "grep -q 'space_cache=v2' /etc/fstab || "
-            "sed -i '/\\bbtrfs\\b/ s/compress=zstd:[0-9]*/compress=zstd:1,space_cache=v2/' /etc/fstab ; "
-            "grep -q 'discard=async' /etc/fstab || "
-            "sed -i '/\\bbtrfs\\b/ s/\\bcompress=/discard=async,compress=/' /etc/fstab"
+            "python3 -c '"
+            "with open(\"/etc/fstab\", \"r\") as f: lines = f.readlines()\n"
+            "new_lines = []\n"
+            "for line in lines:\n"
+            "    parts = line.split()\n"
+            "    if len(parts) >= 3 and parts[2] == \"btrfs\":\n"
+            "        opts = parts[3].split(\",\")\n"
+            "        if \"noatime\" not in opts: opts.append(\"noatime\")\n"
+            "        if \"discard=async\" not in opts: opts.append(\"discard=async\")\n"
+            "        if \"space_cache=v2\" not in opts: opts.append(\"space_cache=v2\")\n"
+            "        comp_found = False\n"
+            "        for i, opt in enumerate(opts):\n"
+            "            if opt.startswith(\"compress=\"):\n"
+            "                opts[i] = \"compress=zstd:1\"\n"
+            "                comp_found = True\n"
+            "        if not comp_found: opts.append(\"compress=zstd:1\")\n"
+            "        parts[3] = \",\".join(opts)\n"
+            "        line = \"\\t\".join(parts) + \"\\n\"\n"
+            "    new_lines.append(line)\n"
+            "with open(\"/etc/fstab\", \"w\") as f: f.writelines(new_lines)"
+            "'"
         )
         self.commands = [
             Command(cmd_backup, "Sao lưu file /etc/fstab trước khi chỉnh sửa", is_sudo=True),
@@ -134,8 +148,24 @@ class BtrfsOptimize(ModuleBase):
         return CheckResult(False, "✗ CHƯA TỐI ƯU", "Btrfs chưa được mount với options tối ưu (noatime, discard=async)")
 
     def get_reset_commands(self) -> list[ResetCommand]:
+        cmd_btrfs_reset = (
+            "python3 -c '"
+            "with open(\"/etc/fstab\", \"r\") as f: lines = f.readlines()\n"
+            "new_lines = []\n"
+            "for line in lines:\n"
+            "    parts = line.split()\n"
+            "    if len(parts) >= 3 and parts[2] == \"btrfs\":\n"
+            "        opts = parts[3].split(\",\")\n"
+            "        opts = [o for o in opts if o not in (\"noatime\", \"discard=async\", \"space_cache=v2\") and not o.startswith(\"compress=\")]\n"
+            "        if not opts: opts.append(\"defaults\")\n"
+            "        parts[3] = \",\".join(opts)\n"
+            "        line = \"\\t\".join(parts) + \"\\n\"\n"
+            "    new_lines.append(line)\n"
+            "with open(\"/etc/fstab\", \"w\") as f: f.writelines(new_lines)"
+            "'"
+        )
         return [
-            ResetCommand("[ -f /etc/fstab.bak ] && mv /etc/fstab.bak /etc/fstab || (sed -i '/\\bbtrfs\\b/ s/noatime,//; s/discard=async,//; s/compress=zstd:[0-9]*,//; s/space_cache=v2,//' /etc/fstab || true)", "Khôi phục lại file /etc/fstab từ bản sao lưu hoặc gỡ các option", is_sudo=True, skip_on_error=True),
+            ResetCommand(f"[ -f /etc/fstab.bak ] && mv /etc/fstab.bak /etc/fstab || ({cmd_btrfs_reset})", "Khôi phục lại file /etc/fstab từ bản sao lưu hoặc gỡ các option", is_sudo=True, skip_on_error=True),
             ResetCommand("systemctl daemon-reload", "Tải lại cấu hình systemd mount", is_sudo=True),
             ResetCommand("mount -o remount / && mount -o remount /home || true", "Remount lại phân vùng hệ thống về mặc định", is_sudo=True, skip_on_error=True)
         ]
@@ -386,13 +416,6 @@ class DirtyRatioConfig(ModuleBase):
 
 # Danh sách xuất bản
 MODULES = [
-    TlpPowerManagement,
-    BtrfsOptimize,
-    UsbAutosuspendFix,
-    FsTrimTimer,
-    SwappinessConfig,
-    IoSchedulerConfig,
-    ZramOptimize,
     DirtyRatioConfig,
     AnanicyCpp,
 ]

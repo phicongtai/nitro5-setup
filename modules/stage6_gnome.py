@@ -424,7 +424,6 @@ MODULES = [
     TimeshiftBackup,
     FlatpakApps,
     SteamGaming,
-    Fcitx5Lotus,
     EasyEffectsPresets,
     ElectronWaylandNative,
     SpotifySpotX,

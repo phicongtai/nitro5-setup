@@ -64,7 +64,6 @@
     "fractional_scaling_value": "100%",
     "gnome_shortcuts": true,
     "system_monitors": true,
-    "timeshift": false,
     "flatpak_apps": true,
     "flatpak_list": [
       "org.videolan.VLC",

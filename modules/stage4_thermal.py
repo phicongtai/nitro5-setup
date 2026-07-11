@@ -86,8 +86,8 @@ class DAMXModule(ModuleBase):
             ),
             Command(
                 "mkdir -p /etc/modprobe.d && "
-                "echo 'blacklist acer_wmi' > /etc/modprobe.d/linuwu-sense.conf && "
-                "echo 'options linuwu_sense nitro_v4=1 four_zone_kb=1 enable_all=1' >> /etc/modprobe.d/linuwu-sense.conf && "
+                "echo 'blacklist acer_wmi' > /etc/modprobe.d/nitro5-blacklist.conf && "
+                "echo 'options linuwu_sense nitro_v4=1 four_zone_kb=1 enable_all=1' > /etc/modprobe.d/linuwu-sense.conf && "
                 "mkdir -p /etc/modules-load.d && "
                 "echo 'linuwu_sense' > /etc/modules-load.d/linuwu-sense.conf && "
                 "modprobe -r acer_wmi || true",
@@ -225,7 +225,7 @@ DAMX_DESK_EOF
             ResetCommand("dkms remove linuwu_sense/1.0 --all || true", "Xóa Linuwu-Sense driver khỏi DKMS", is_sudo=True, skip_on_error=True),
             ResetCommand("rm -rf /usr/src/linuwu_sense-1.0 || true", "Xóa mã nguồn Linuwu-Sense trong usr/src", is_sudo=True, skip_on_error=True),
             ResetCommand("modprobe -r linuwu_sense || true", "Unload linuwu_sense kernel module", is_sudo=True, skip_on_error=True),
-            ResetCommand("rm -f /etc/modprobe.d/linuwu-sense.conf /etc/modules-load.d/linuwu-sense.conf || true", "Xóa các cấu hình modprobe của linuwu_sense", is_sudo=True, skip_on_error=True),
+            ResetCommand("rm -f /etc/modprobe.d/linuwu-sense.conf /etc/modprobe.d/nitro5-blacklist.conf /etc/modules-load.d/linuwu-sense.conf || true", "Xóa các cấu hình modprobe của linuwu_sense", is_sudo=True, skip_on_error=True),
             ResetCommand("rm -rf /opt/damx /usr/local/bin/damx-launcher /usr/share/applications/damx.desktop /var/log/DAMX_Daemon_Log.log || true", "Xóa các file ứng dụng DAMX", is_sudo=True, skip_on_error=True)
         ]
 
@@ -353,9 +353,6 @@ class CoreTempModule(ModuleBase):
 
 # Danh sách xuất bản
 MODULES = [
-    LmSensors,
-    ThermalD,
-    DAMXModule,
     AcerPredatorRGB,
     STui,
     CoreTempModule

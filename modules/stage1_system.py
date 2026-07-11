@@ -338,14 +338,5 @@ class FirmwareUpdates(ModuleBase):
 
 # Danh sách xuất bản của giai đoạn
 MODULES = [
-    SystemDiagnostics,
-    OptimizeNetwork,
-    UpgradeSystem,
-    RpmFusionFree,
-    RpmFusionNonFree,
-    FlathubRepo,
-    FedoraWorkstationRepos,
-    BuildToolsDkms,
-    FirmwareUpdates,
-    AcerNitroNativeFix
+    FirmwareUpdates
 ]

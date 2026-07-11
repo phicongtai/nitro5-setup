@@ -87,15 +87,17 @@ class EthernetEeeFix(ModuleBase):
         script_content = (
             r"""cat > /etc/NetworkManager/dispatcher.d/99-disable-eee << 'EOF'
 #!/bin/bash
-if [ "$1" == "enp43s0" ] && [ "$2" == "up" ]; then
-    /usr/sbin/ethtool --set-eee enp43s0 eee off
+interface="$1"
+action="$2"
+if [[ "$interface" =~ ^en ]] && [ "$action" == "up" ]; then
+    /usr/sbin/ethtool --set-eee "$interface" eee off 2>/dev/null || true
 fi
 EOF"""
         )
         
         self.commands = [
             Command("dnf5 install -y ethtool", "Cài đặt công cụ ethtool", is_sudo=True),
-            Command("ethtool -i enp43s0 2>/dev/null || echo 'Không phát hiện cổng enp43s0'", "Kiểm tra driver card mạng enp43s0", is_sudo=False),
+            Command("ETH_IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^en' | head -n 1); [ -n \"$ETH_IFACE\" ] && ethtool -i \"$ETH_IFACE\" 2>/dev/null || echo 'Không phát hiện cổng Ethernet active'", "Kiểm tra driver card mạng Ethernet", is_sudo=False),
             Command(script_content, "Tạo NetworkManager dispatcher script tắt EEE", is_sudo=True),
             Command("chmod +x /etc/NetworkManager/dispatcher.d/99-disable-eee", "Cấp quyền thực thi cho dispatcher script", is_sudo=True)
         ]
@@ -103,7 +105,7 @@ EOF"""
     def validate(self) -> CheckResult:
         filepath = "/etc/NetworkManager/dispatcher.d/99-disable-eee"
         if os.path.exists(filepath) and os.access(filepath, os.X_OK):
-            return CheckResult(True, "✓ OK", "Đã cấu hình tự động tắt EEE cho enp43s0")
+            return CheckResult(True, "✓ OK", "Đã cấu hình tự động tắt EEE cho card mạng Ethernet")
         return CheckResult(False, "✗ CHƯA CẤU HÌNH", "Chưa tắt EEE hoặc thiếu kịch bản NM")
 
     def get_reset_commands(self) -> list[ResetCommand]:
