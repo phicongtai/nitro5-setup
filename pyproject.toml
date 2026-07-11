@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nitro5-setup"
+version = "2.0.0"
+description = "Acer Nitro 5 AN515-58 - Fedora Setup & Optimization Utility"
+readme = "README.md"
+authors = [
+    { name = "Developer", email = "student@example.com" }
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: X11 Applications :: GTK",
+]
+dependencies = [
+    "PyGObject>=3.44.0",
+    "keyring>=24.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/nitro5-setup"
+Bug-Tracker = "https://github.com/example/nitro5-setup/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "gui*", "modules*"]

@@ -1,0 +1,167 @@
+/* ============================================================
+   nitro5-setup — GUI Stylesheet
+   Fedora Workstation Edition
+   ============================================================ */
+
+/* --- Badge labels --- */
+.badge-required {
+    background-color: rgba(239, 41, 41, 0.15);
+    color: #ff6666;
+    border: 1px solid rgba(239, 41, 41, 0.3);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+}
+.badge-optional {
+    background-color: rgba(138, 226, 52, 0.15);
+    color: #8ae234;
+    border: 1px solid rgba(138, 226, 52, 0.3);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+}
+.badge-gpu {
+    background-color: rgba(114, 159, 207, 0.15);
+    color: #729fcf;
+    border: 1px solid rgba(114, 159, 207, 0.3);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+}
+/* Badge cho module moi them trong phien ban nay */
+.badge-new {
+    background-color: rgba(39, 174, 96, 0.2);
+    color: #2ecc71;
+    border: 1px solid rgba(39, 174, 96, 0.4);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: bold;
+}
+/* Badge cho module workstation-only */
+.badge-workstation {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* --- Terminal output box --- */
+.terminal-box {
+    background-color: #0d1117;
+    border-radius: 8px;
+    border: 1px solid #21262d;
+    padding: 10px;
+}
+.terminal-text {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Monospace', monospace;
+    font-size: 12px;
+    background-color: transparent;
+    color: #c9d1d9;
+}
+
+/* --- Progress bar animation --- */
+progressbar trough {
+    border-radius: 6px;
+    min-height: 6px;
+}
+progressbar progress {
+    border-radius: 6px;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    transition: all 0.3s ease;
+}
+
+/* --- Sidebar --- */
+.sidebar-header {
+    font-size: 11px;
+    font-weight: bold;
+    color: #888888;
+    padding: 10px 10px 5px 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.main-header {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* --- System check result labels --- */
+.checker-ok {
+    color: #2ecc71;
+    font-weight: bold;
+}
+.checker-failed {
+    color: #e74c3c;
+    font-weight: bold;
+}
+.checker-warning {
+    color: #f1c40f;
+    font-weight: bold;
+}
+
+/* --- Module card hover effect --- */
+.module-row:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+    transition: background-color 0.15s ease;
+}
+
+/* --- Stage description label --- */
+.stage-description {
+    color: alpha(currentColor, 0.7);
+    font-size: 13px;
+}
+
+/* --- Module Status Card Styles --- */
+.module-card-ok {
+    background-color: rgba(46, 204, 113, 0.12);
+    border: 1px solid rgba(46, 204, 113, 0.4);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.module-card-failed {
+    background-color: rgba(231, 76, 60, 0.12);
+    border: 1px solid rgba(231, 76, 60, 0.4);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.module-card-warning {
+    background-color: rgba(241, 196, 15, 0.10);
+    border: 1px solid rgba(241, 196, 15, 0.35);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.module-card-checking {
+    background-color: rgba(52, 152, 219, 0.08);
+    border: 1px solid rgba(52, 152, 219, 0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.check-summary-label {
+    font-size: 14px;
+    font-weight: bold;
+}
+.btn-fix-all {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 8px 20px;
+}
+.check-summary-ok {
+    color: #2ecc71;
+    font-weight: bold;
+    font-size: 14px;
+}
+.check-summary-fail {
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 14px;
+}
+

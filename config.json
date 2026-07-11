@@ -1,0 +1,116 @@
+{
+  "_version": "1.1",
+  "_created": "2026-07-11",
+  "stage1": {
+    "system_diagnostics": true,
+    "optimize_network": true,
+    "upgrade": true,
+    "rpm_fusion_free": true,
+    "rpm_fusion_nonfree": true,
+    "flathub": true,
+    "workstation_repos": true,
+    "firmware_updates": true,
+    "build_tools_dkms": true,
+    "acer_nitro_native_fix": true
+  },
+  "stage2": {
+    "nvidia_driver": true,
+    "cuda": true,
+    "vaapi_nvidia": true,
+    "switcheroo": true,
+    "native_optimus_policy": true,
+    "brightness_fix": true,
+    "brightness_fix_mode": "native",
+    "gaming_overlay": true,
+    "gamemode": true,
+    "nvidia_suspend_fix": true,
+    "nvidia_wayland_env": true,
+    "nvidia_gdm_wayland": true,
+    "vulkan": true
+  },
+  "stage3": {
+    "ffmpeg": true,
+    "gstreamer": true,
+    "intel_media": true,
+    "pipewire": true,
+    "openh264": true,
+    "bluetooth": true
+  },
+  "stage4": {
+    "lm_sensors": true,
+    "thermald": true,
+    "damx": true,
+    "acer_predator_rgb": true,
+    "s_tui": true,
+    "coretemp": true
+  },
+  "stage5": {
+    "tlp_power_management": true,
+    "usb_autosuspend_fix": true,
+    "fstrim": true,
+    "swappiness": true,
+    "swappiness_mode": "aiml",
+    "io_scheduler": true,
+    "zram_optimize": true,
+    "dirty_ratio": true,
+    "ananicy_cpp": true,
+    "btrfs_nvme": true
+  },
+  "stage6": {
+    "gnome_tweaks": true,
+    "gnome_extensions": true,
+    "gnome_shell_extensions": false,
+    "fractional_scaling": false,
+    "fractional_scaling_value": "100%",
+    "gnome_shortcuts": true,
+    "system_monitors": true,
+    "timeshift": false,
+    "flatpak_apps": true,
+    "flatpak_list": [
+      "org.videolan.VLC",
+      "com.github.tchx84.Flatseal",
+      "com.discordapp.Discord",
+      "org.localsend.localsend_app",
+      "com.github.wwmm.easyeffects",
+      "com.mattjakeman.ExtensionManager"
+    ],
+    "steam": false,
+    "fcitx5_lotus": true,
+    "easyeffects_presets": true,
+    "spotify_spotx": false
+  },
+  "stage7": {
+    "google_chrome": true,
+    "vscode": true,
+    "obsidian": true,
+    "git_config": true,
+    "cpp_env": true,
+    "python_env": true,
+    "java_env": true,
+    "dotnet_env": true,
+    "nodejs_env": true,
+    "rust_env": false,
+    "podman_docker": false
+  },
+  "stage8": {
+    "dnf_clean": true,
+    "journal_clean": true,
+    "temp_clean": true,
+    "flatpak_clean": true,
+    "ssd_trim": true,
+    "temp_build_clean": true
+  },
+  "stage10": {
+    "check_kernel": true,
+    "system_upgrade": true,
+    "flatpak_upgrade": true,
+    "dkms_autoinstall": true
+  },
+  "stage11": {
+    "btrfs_snapshot": true,
+    "firewall_dev_ports": true,
+    "ethernet_eee_fix": false,
+    "webcam_setup": true,
+    "thunderbolt_policy": true
+  }
+}
