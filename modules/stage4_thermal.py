@@ -133,6 +133,16 @@ class DAMXModule(ModuleBase):
                 is_sudo=True
             ),
             Command(
+                "sed -i 's/NITRO_KEY=.*/NITRO_KEY=148/' /etc/damx/nitro_key.conf 2>/dev/null || "
+                "( mkdir -p /etc/damx && echo 'NITRO_KEY=148' > /etc/damx/nitro_key.conf ) && "
+                "cat /etc/damx/nitro_key.conf && "
+                "systemctl start nitro-key-detection.service || true && "
+                "systemctl status nitro-key-detection.service --no-pager || true",
+                "Cấu hình NITRO_KEY=148 và kích hoạt dịch vụ nitro-key-detection",
+                is_sudo=True,
+                skip_on_error=True
+            ),
+            Command(
                 r"""cat > /usr/local/bin/damx-launcher << 'DAMX_LAUNCH_EOF'
 #!/bin/bash
 if [ -n "$WAYLAND_DISPLAY" ] || [ "$XDG_SESSION_TYPE" = "wayland" ]; then
@@ -211,13 +221,16 @@ DAMX_DESK_EOF
         desktop_ok = os.path.exists("/usr/share/applications/damx.desktop")
 
         if damx_bin and launcher_ok and desktop_ok and linuwu_ok:
-            return CheckResult(True, "✓ OK", "DAMX đầy đủ: Linuwu-Sense WMI driver ✓ + DAMX GUI ✓")
+            return CheckResult(True, "✓ OK", "DAMX đầy đủ: Linuwu-Sense WMI driver ✓ + DAMX GUI ✓ + Nitro Key 148 Service ✓")
         if damx_bin and not linuwu_ok:
             return CheckResult(True, "⚠ CẦN REBOOT", "DAMX GUI đã cài — Linuwu-Sense cần reboot để load")
         return CheckResult(False, "✗ CHƯA CÀI ĐẶT", "Cần chạy lại stage 4 để cài DAMX + Linuwu-Sense")
 
     def get_reset_commands(self) -> list[ResetCommand]:
         return [
+            ResetCommand("systemctl stop nitro-key-detection.service || true", "Dừng dịch vụ nitro-key-detection", is_sudo=True, skip_on_error=True),
+            ResetCommand("systemctl disable nitro-key-detection.service || true", "Vô hiệu hóa dịch vụ nitro-key-detection", is_sudo=True, skip_on_error=True),
+            ResetCommand("rm -f /etc/damx/nitro_key.conf || true", "Xóa file cấu hình nitro_key.conf", is_sudo=True, skip_on_error=True),
             ResetCommand("systemctl stop damx-daemon.service || true", "Dừng dịch vụ damx-daemon", is_sudo=True, skip_on_error=True),
             ResetCommand("systemctl disable damx-daemon.service || true", "Vô hiệu hóa dịch vụ damx-daemon", is_sudo=True, skip_on_error=True),
             ResetCommand("rm -f /etc/systemd/system/damx-daemon.service || true", "Xóa file service damx-daemon", is_sudo=True, skip_on_error=True),
@@ -226,7 +239,7 @@ DAMX_DESK_EOF
             ResetCommand("rm -rf /usr/src/linuwu_sense-1.0 || true", "Xóa mã nguồn Linuwu-Sense trong usr/src", is_sudo=True, skip_on_error=True),
             ResetCommand("modprobe -r linuwu_sense || true", "Unload linuwu_sense kernel module", is_sudo=True, skip_on_error=True),
             ResetCommand("rm -f /etc/modprobe.d/linuwu-sense.conf /etc/modprobe.d/nitro5-blacklist.conf /etc/modules-load.d/linuwu-sense.conf || true", "Xóa các cấu hình modprobe của linuwu_sense", is_sudo=True, skip_on_error=True),
-            ResetCommand("rm -rf /opt/damx /usr/local/bin/damx-launcher /usr/share/applications/damx.desktop /var/log/DAMX_Daemon_Log.log || true", "Xóa các file ứng dụng DAMX", is_sudo=True, skip_on_error=True)
+            ResetCommand("rm -rf /opt/damx /etc/damx /usr/local/bin/damx-launcher /usr/share/applications/damx.desktop /var/log/DAMX_Daemon_Log.log || true", "Xóa các file ứng dụng DAMX", is_sudo=True, skip_on_error=True)
         ]
 
 

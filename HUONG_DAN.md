@@ -120,6 +120,7 @@ Bấm nút **🔄 Chấm điểm hệ thống** để chạy quét thời gian t
 * **Chế độ quạt cố định**: Chuyển đổi nhanh giữa các chế độ **Quiet** (Yên tĩnh), **Normal** (Cân bằng), **Performance** (Hiệu năng cao), **Turbo** (Tối đa 100% công suất quạt).
 * **Fan Curve tùy chỉnh**: Thiết lập biểu đồ đường cong tốc độ quạt theo từng mức nhiệt độ cụ thể.
 * **Chế độ hiệu năng (Performance Profile)**: Chuyển đổi profile năng lượng ACPI của máy (Eco, Silent, Balanced, Performance, Turbo).
+* **Tự động cấu hình Nitro Key 148**: Tự động đặt `NITRO_KEY=148` trong `/etc/damx/nitro_key.conf` và kích hoạt dịch vụ `nitro-key-detection.service` phục vụ nhận diện phím cứng NitroSense.
 
 ---
 
